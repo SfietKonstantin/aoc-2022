@@ -36,18 +36,18 @@ where
     Ok(elves)
 }
 
-pub fn find_max_calories(elves: Vec<Calories>) -> Option<u32> {
-    elves.into_iter().max()
+pub fn find_max_calories(elves: &[Calories]) -> Option<Calories> {
+    elves.iter().copied().max()
 }
 
-pub fn find_calories_top(mut elves: Vec<Calories>, count: usize) -> u32 {
+pub fn find_calories_top(mut elves: Vec<Calories>, count: usize) -> Calories {
     elves.sort_by(|a, b| b.cmp(a));
     elves.into_iter().take(count).sum()
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::read_input;
+    use super::{find_calories_top, find_max_calories, read_input};
 
     #[test]
     fn test_parse() {
@@ -69,5 +69,11 @@ mod tests {
         let actual = read_input(test_str.as_bytes()).unwrap();
         let expected = vec![6000, 4000, 11000, 24000, 10000];
         assert_eq!(actual, expected);
+
+        let max = find_max_calories(&actual).unwrap();
+        assert_eq!(max, 24000);
+
+        let top_3 = find_calories_top(actual, 3);
+        assert_eq!(top_3, 45000);
     }
 }
