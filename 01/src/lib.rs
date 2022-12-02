@@ -47,7 +47,7 @@ pub fn find_calories_top(mut elves: Vec<Calories>, count: usize) -> Calories {
 
 #[cfg(test)]
 mod tests {
-    use super::{find_calories_top, find_max_calories, read_input};
+    use super::*;
 
     #[test]
     fn test_parse() {

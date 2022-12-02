@@ -1,6 +1,7 @@
 use self::RPS::{Paper, Rock, Scissors};
 use std::io::{BufRead, BufReader, Error as IoError, Read};
 use thiserror::Error;
+use RoundResult::{Draw, Lose, Win};
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -28,26 +29,56 @@ impl RPS {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+enum RoundResult {
+    Win,
+    Draw,
+    Lose,
+}
+
+impl RoundResult {
+    fn score(&self) -> i32 {
+        match self {
+            Win => 6,
+            Draw => 3,
+            Lose => 0
+        }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
 pub struct Round {
     enemy: RPS,
     yours: RPS,
+    goal: RoundResult
 }
 
 impl Round {
-    fn new(enemy: RPS, yours: RPS) -> Self {
-        Round { enemy, yours }
+    fn new(enemy: RPS, yours: RPS, goal: RoundResult) -> Self {
+        Round { enemy, yours, goal }
     }
 
-    fn win_score(&self) -> i32 {
+    fn get_round_result(&self) -> RoundResult {
         match (&self.enemy, &self.yours) {
-            (Rock, Paper) | (Paper, Scissors) | (Scissors, Rock) => 6,
-            (Rock, Rock) | (Paper, Paper) | (Scissors, Scissors) => 3,
-            (Rock, Scissors) | (Paper, Rock) | (Scissors, Paper) => 0,
+            (Rock, Paper) | (Paper, Scissors) | (Scissors, Rock) => Win,
+            (Rock, Rock) | (Paper, Paper) | (Scissors, Scissors) => Draw,
+            (Rock, Scissors) | (Paper, Rock) | (Scissors, Paper) => Lose,
         }
     }
 
-    fn score(&self) -> i32 {
-        self.win_score() + self.yours.score()
+    fn get_your_move(&self) -> RPS {
+        match (&self.enemy, &self.goal) {
+            (Rock, Draw) | (Paper, Lose) | (Scissors, Win) => Rock,
+            (Rock, Win) | (Paper, Draw) | (Scissors, Lose) => Paper,
+            (Rock, Lose) | (Paper, Win) | (Scissors, Draw) => Scissors,
+        }
+    }
+
+    fn score_1(&self) -> i32 {
+        self.get_round_result().score() + self.yours.score()
+    }
+
+    fn score_2(&self) -> i32 {
+        self.goal.score() + self.get_your_move().score()
     }
 }
 
@@ -70,27 +101,30 @@ where
 
 fn read_line(line: &str) -> Result<Round, Error> {
     match line.trim() {
-        "A X" => Ok(Round::new(Rock, Rock)),
-        "A Y" => Ok(Round::new(Rock, Paper)),
-        "A Z" => Ok(Round::new(Rock, Scissors)),
-        "B X" => Ok(Round::new(Paper, Rock)),
-        "B Y" => Ok(Round::new(Paper, Paper)),
-        "B Z" => Ok(Round::new(Paper, Scissors)),
-        "C X" => Ok(Round::new(Scissors, Rock)),
-        "C Y" => Ok(Round::new(Scissors, Paper)),
-        "C Z" => Ok(Round::new(Scissors, Scissors)),
+        "A X" => Ok(Round::new(Rock, Rock, Lose)),
+        "A Y" => Ok(Round::new(Rock, Paper, Draw)),
+        "A Z" => Ok(Round::new(Rock, Scissors, Win)),
+        "B X" => Ok(Round::new(Paper, Rock, Lose)),
+        "B Y" => Ok(Round::new(Paper, Paper, Draw)),
+        "B Z" => Ok(Round::new(Paper, Scissors, Win)),
+        "C X" => Ok(Round::new(Scissors, Rock, Lose)),
+        "C Y" => Ok(Round::new(Scissors, Paper, Draw)),
+        "C Z" => Ok(Round::new(Scissors, Scissors, Win)),
         _ => Err(Error::Parse(line.to_string())),
     }
 }
 
-pub fn compute_score(rounds: Vec<Round>) -> i32 {
-    rounds.into_iter().map(|round| round.score()).sum()
+pub fn compute_score_1(rounds: &[Round]) -> i32 {
+    rounds.iter().map(|round| round.score_1()).sum()
+}
+
+pub fn compute_score_2(rounds: &[Round]) -> i32 {
+    rounds.iter().map(|round| round.score_2()).sum()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{compute_score, read_input, Paper, Rock, Scissors};
-    use crate::Round;
+    use super::*;
 
     #[test]
     fn test_parse() {
@@ -100,13 +134,16 @@ C Z
 "#;
         let actual = read_input(test_str.as_bytes()).unwrap();
         let expected = vec![
-            Round::new(Rock, Paper),
-            Round::new(Paper, Rock),
-            Round::new(Scissors, Scissors),
+            Round::new(Rock, Paper, Draw),
+            Round::new(Paper, Rock, Lose),
+            Round::new(Scissors, Scissors, Win),
         ];
         assert_eq!(actual, expected);
 
-        let score = compute_score(actual);
+        let score = compute_score_1(&actual);
         assert_eq!(score, 15);
+
+        let score = compute_score_2(&actual);
+        assert_eq!(score, 12);
     }
 }
