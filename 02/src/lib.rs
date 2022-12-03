@@ -1,7 +1,7 @@
+use self::RoundResult::{Draw, Lose, Win};
 use self::RPS::{Paper, Rock, Scissors};
 use std::io::{BufRead, BufReader, Error as IoError, Read};
 use thiserror::Error;
-use RoundResult::{Draw, Lose, Win};
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -40,7 +40,7 @@ impl RoundResult {
         match self {
             Win => 6,
             Draw => 3,
-            Lose => 0
+            Lose => 0,
         }
     }
 }
@@ -49,7 +49,7 @@ impl RoundResult {
 pub struct Round {
     enemy: RPS,
     yours: RPS,
-    goal: RoundResult
+    goal: RoundResult,
 }
 
 impl Round {
