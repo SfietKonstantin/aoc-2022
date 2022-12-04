@@ -42,8 +42,8 @@ where
     let mut common = iter.next()?.collect::<HashSet<_>>();
 
     // Intersect existing with the next ones
-    while let Some(next) = iter.next() {
-        let next = next.collect::<HashSet<_>>();
+    for item in iter {
+        let next = item.collect::<HashSet<_>>();
         common = common.intersection(&next).copied().collect::<HashSet<_>>();
     }
 
@@ -93,7 +93,7 @@ pub fn compute_priorities(rucksacks: Vec<Rucksack>) -> Result<i32, Error> {
 }
 
 fn find_rucksack_priority(r: Rucksack) -> Result<i32, Error> {
-    let common = r.find_common().ok_or_else(|| Error::NoCommon)?;
+    let common = r.find_common().ok_or(Error::NoCommon)?;
     get_priority(common)
 }
 
@@ -111,7 +111,7 @@ where
     I: Iterator<Item = Rucksack>,
 {
     let iter = chunk.map(|r| r.left.into_iter().chain(r.right.into_iter()));
-    let common = find_common(iter).ok_or_else(|| Error::NoCommon)?;
+    let common = find_common(iter).ok_or(Error::NoCommon)?;
     get_priority(common)
 }
 
