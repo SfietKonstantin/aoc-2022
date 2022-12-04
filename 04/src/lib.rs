@@ -22,21 +22,38 @@ impl Pair {
         Pair { left, right }
     }
 
-    fn fully_contains(&self) -> bool {
-        self.left.fully_contains(&self.right) || self.right.fully_contains(&self.left)
+    fn check_match<P>(&self) -> bool
+    where
+        P: PairMatchingPredicate<i32>,
+    {
+        P::check(&self.left, &self.right) || P::check(&self.right, &self.left)
     }
 }
 
-trait RangeExt {
-    fn fully_contains(&self, other: &Self) -> bool;
+pub trait PairMatchingPredicate<T> {
+    fn check(left: &RangeInclusive<T>, right: &RangeInclusive<T>) -> bool;
 }
 
-impl<T> RangeExt for RangeInclusive<T>
+pub struct FullyContains;
+
+impl<T> PairMatchingPredicate<T> for FullyContains
 where
     T: PartialOrd,
 {
-    fn fully_contains(&self, other: &Self) -> bool {
-        other.start() >= self.start() && other.end() <= self.end()
+    fn check(left: &RangeInclusive<T>, right: &RangeInclusive<T>) -> bool {
+        left.start() >= right.start() && left.end() <= right.end()
+    }
+}
+
+pub struct Overlaps;
+
+impl<T> PairMatchingPredicate<T> for Overlaps
+where
+    T: PartialOrd,
+{
+    fn check(left: &RangeInclusive<T>, right: &RangeInclusive<T>) -> bool {
+        left.start() <= right.start() && left.end() >= right.start()
+            || right.start() <= left.start() && right.end() >= left.end()
     }
 }
 
@@ -57,8 +74,11 @@ where
     Ok(pairs)
 }
 
-pub fn count_fully_contains(pairs: &[Pair]) -> usize {
-    pairs.iter().filter(|pair| pair.fully_contains()).count()
+pub fn count_matching<P>(pairs: &[Pair]) -> usize
+where
+    P: PairMatchingPredicate<i32>,
+{
+    pairs.iter().filter(|pair| pair.check_match::<P>()).count()
 }
 
 fn read_line(input: &str) -> Option<Pair> {
@@ -107,5 +127,15 @@ mod tests {
             Pair::new(2..=6, 4..=8),
         ];
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_algo() {
+        let pairs = read_input(TEST_STR.as_bytes()).unwrap();
+        let fully_contains = count_matching::<FullyContains>(&pairs);
+        assert_eq!(fully_contains, 2);
+
+        let overlaps = count_matching::<Overlaps>(&pairs);
+        assert_eq!(overlaps, 4);
     }
 }
