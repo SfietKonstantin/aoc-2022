@@ -36,6 +36,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "advent2022-06"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+]
+
+[[package]]
 name = "advent2022-utils"
 version = "0.1.0"
 
