@@ -57,18 +57,16 @@ where
     Ok(signals)
 }
 
-pub fn find_first_marker<const N: usize>(signal: Vec<char>) -> Option<usize> {
+pub fn find_first_marker<const N: usize>(signal: &[char]) -> Option<usize> {
     signal
-        .as_slice()
         .new_window_iterator::<N>()
         .enumerate()
-        .filter(|(_, w)| is_marker(w))
-        .next()
+        .find(|(_, w)| is_marker(w))
         .map(|(i, _)| i + N)
 }
 
 fn is_marker(window: &[char]) -> bool {
-    let window_set = window.into_iter().copied().collect::<HashSet<_>>();
+    let window_set = window.iter().copied().collect::<HashSet<_>>();
     window_set.len() == window.len()
 }
 
@@ -114,7 +112,7 @@ zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw
         let actual = read_input(TEST_STR.as_bytes())
             .unwrap()
             .into_iter()
-            .map(|signal| find_first_marker::<4>(signal))
+            .map(|signal| find_first_marker::<4>(&signal))
             .collect::<Vec<_>>();
         let expected = vec![Some(7), Some(5), Some(6), Some(10), Some(11)];
         assert_eq!(actual, expected);

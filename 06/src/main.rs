@@ -8,9 +8,12 @@ fn main() -> Result<()> {
     let file = File::open(path)?;
     let signals = read_input(file)?;
     assert_eq!(signals.len(), 1);
-    let signal = signals.into_iter().next().unwrap();
+    let signal = signals.get(0).unwrap();
 
     let marker = find_first_marker::<4>(signal).unwrap();
     println!("{marker}");
+
+    let msg_marker = find_first_marker::<14>(signal).unwrap();
+    println!("{msg_marker}");
     Ok(())
 }
