@@ -1,3 +1,7 @@
+use std::collections::HashSet;
+use std::io::{BufRead, BufReader, Error as IoError, Read};
+use thiserror::Error;
+
 struct WindowArrayIter<'a, T, const N: usize> {
     underlying: &'a [T],
     current: usize,
@@ -30,6 +34,44 @@ impl<'a, T, const N: usize> Iterator for WindowArrayIter<'a, T, N> {
     }
 }
 
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("I/O error")]
+    IO(#[from] IoError),
+}
+
+pub fn read_input<R>(read: R) -> Result<Vec<Vec<char>>, Error>
+where
+    R: Read,
+{
+    let lines = BufReader::new(read).lines();
+    let lines = lines
+        .map(|line| line.map_err(Error::from))
+        .collect::<Result<Vec<_>, _>>()?;
+    let signals = lines
+        .iter()
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .map(|line| line.chars().collect())
+        .collect::<Vec<_>>();
+    Ok(signals)
+}
+
+pub fn find_first_marker<const N: usize>(signal: Vec<char>) -> Option<usize> {
+    signal
+        .as_slice()
+        .new_window_iterator::<N>()
+        .enumerate()
+        .filter(|(_, w)| is_marker(w))
+        .next()
+        .map(|(i, _)| i + N)
+}
+
+fn is_marker(window: &[char]) -> bool {
+    let window_set = window.into_iter().copied().collect::<HashSet<_>>();
+    window_set.len() == window.len()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -58,5 +100,23 @@ mod tests {
         let values: &[i32] = &values;
         let mut actual = values.new_window_iterator::<3>();
         assert!(actual.next().is_none());
+    }
+
+    const TEST_STR: &str = r#"mjqjpqmgbljsphdztnvjfqwrcgsmlb
+bvwbjplbgvbhsrlpgdmjqwftvncz
+nppdvjthqldpwncqszvftbrmjlhg
+nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg
+zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw
+"#;
+
+    #[test]
+    fn test_initial() {
+        let actual = read_input(TEST_STR.as_bytes())
+            .unwrap()
+            .into_iter()
+            .map(|signal| find_first_marker::<4>(signal))
+            .collect::<Vec<_>>();
+        let expected = vec![Some(7), Some(5), Some(6), Some(10), Some(11)];
+        assert_eq!(actual, expected);
     }
 }

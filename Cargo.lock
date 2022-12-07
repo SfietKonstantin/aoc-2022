@@ -40,6 +40,7 @@ name = "advent2022-06"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "thiserror",
 ]
 
 [[package]]
