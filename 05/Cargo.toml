@@ -1,0 +1,11 @@
+[package]
+name = "advent2022-05"
+version = "0.1.0"
+authors = ["Lucien XU <sfietkonstantin@free.fr>"]
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+itertools = "0.10"
+regex = "1.7"
+thiserror = "1.0"

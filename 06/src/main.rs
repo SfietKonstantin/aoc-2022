@@ -1,4 +1,4 @@
-use advent2022_06::{read_input, find_first_marker};
+use advent2022_06::{find_first_marker, read_input};
 use anyhow::Result;
 use std::fs::File;
 use std::path::Path;
